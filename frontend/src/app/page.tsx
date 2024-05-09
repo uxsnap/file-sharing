@@ -7,6 +7,7 @@ import { AppShell, Button, Flex, useMantineTheme, Text } from "@mantine/core";
 import "@mantine/core/styles.css";
 import FileItem from "@/components/FileItem";
 import Search from "@/components/Search";
+import FileDropZone from "@/components/FileDropZone";
 
 export default function Home() {
   const theme = useMantineTheme();
@@ -35,14 +36,23 @@ export default function Home() {
 
           <Flex h="100%" align="center" justify="flex-end" gap={12}>
             <Search />
-            <FaUser size={24} color={mainColor} />
-            <Button variant="light">Logout</Button>
+            <Button variant="light">
+              <Flex align="center" gap={8}>
+                <FaUser size={24} color={mainColor} />
+                <Text fw="700">UserName</Text>
+              </Flex>
+            </Button>
+            <Button color="yellow" variant="light">
+              Logout
+            </Button>
           </Flex>
         </Flex>
       </AppShell.Header>
 
       <AppShell.Main w="100%">
         <Flex h="100%" w="100%" wrap="wrap" gap={12}>
+          <FileDropZone color={theme.colors.gray[4]} />
+
           {Array.from({ length: 20 }, (_, ind) => (
             <FileItem color={theme.colors.blue[8]} key={ind} />
           ))}
