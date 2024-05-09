@@ -1,0 +1,53 @@
+"use client";
+import Link from "next/link";
+
+import { FaUser, FaFileCode } from "react-icons/fa";
+import { AppShell, Button, Flex, useMantineTheme, Text } from "@mantine/core";
+
+import "@mantine/core/styles.css";
+import FileItem from "@/components/FileItem";
+import Search from "@/components/Search";
+
+export default function Home() {
+  const theme = useMantineTheme();
+
+  const mainColor = theme.colors.blue[4];
+
+  return (
+    <AppShell header={{ height: 60 }} padding="sm">
+      <AppShell.Header pl={12} pr={12}>
+        <Flex h="100%" align="center" justify="space-between">
+          <Flex align="center" gap={8}>
+            <Link style={{ color: mainColor, display: "flex" }} href="/">
+              <FaFileCode size={30} />
+            </Link>
+
+            <Text
+              c="blue"
+              fw={900}
+              variant="gradient"
+              fs="italic"
+              gradient={{ from: "cyan", to: "blue", deg: 91 }}
+            >
+              FILE SHARING
+            </Text>
+          </Flex>
+
+          <Flex h="100%" align="center" justify="flex-end" gap={12}>
+            <Search />
+            <FaUser size={24} color={mainColor} />
+            <Button variant="light">Logout</Button>
+          </Flex>
+        </Flex>
+      </AppShell.Header>
+
+      <AppShell.Main w="100%">
+        <Flex h="100%" w="100%" wrap="wrap" gap={12}>
+          {Array.from({ length: 20 }, (_, ind) => (
+            <FileItem color={theme.colors.blue[8]} key={ind} />
+          ))}
+        </Flex>
+      </AppShell.Main>
+    </AppShell>
+  );
+}
