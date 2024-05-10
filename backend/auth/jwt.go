@@ -12,7 +12,7 @@ import (
 )
 
 type loginPayload struct {
-  Username string `form:"username" json:"username" binding:"required"`
+  Email string `form:"email" json:"email" binding:"required"`
   Password string `form:"password" json:"password" binding:"required"`
 }
 
@@ -20,9 +20,7 @@ var identityKey = "id"
 
 // User demo
 type User struct {
-  UserName  string
-  FirstName string
-  LastName  string
+  Email  string
 }
 
 func newJwtMiddleware() (*jwt.GinJWTMiddleware, error) {
@@ -34,25 +32,28 @@ func newJwtMiddleware() (*jwt.GinJWTMiddleware, error) {
 	secretKey := os.Getenv("SECRET_KEY")
 
   return jwt.New(&jwt.GinJWTMiddleware{
-    Realm:       "test zone",
+    Realm:       "file_sharing",
     Key:         []byte(secretKey),
-    Timeout:     time.Hour,
     MaxRefresh:  time.Hour,
     IdentityKey: identityKey,
+
     PayloadFunc: func(data interface{}) jwt.MapClaims {
       if v, ok := data.(*User); ok {
         return jwt.MapClaims{
-          identityKey: v.UserName,
+          identityKey: v.Email,
         }
       }
       return jwt.MapClaims{}
     },
+
     IdentityHandler: func(c *gin.Context) interface{} {
       claims := jwt.ExtractClaims(c)
+
       return &User{
-        UserName: claims[identityKey].(string),
+        Email: claims[identityKey].(string),
       }
     },
+    
     Authenticator: func(c *gin.Context) (interface{}, error) {
       var loginValues loginPayload
 
@@ -60,26 +61,21 @@ func newJwtMiddleware() (*jwt.GinJWTMiddleware, error) {
         return "", jwt.ErrMissingLoginValues
       }
 
-      userID := loginValues.Username
-      password := loginValues.Password
+      userEmail := loginValues.Email
 
-      if (userID == "admin" && password == "admin") || (userID == "test" && password == "test") {
-        return &User{
-          UserName:  userID,
-          LastName:  "Bo-Yi",
-          FirstName: "Wu",
-        }, nil
-      }
-
-      return nil, jwt.ErrFailedAuthentication
+      return &User{
+        Email: userEmail,
+      }, jwt.ErrFailedAuthentication
     },
+    
     Authorizator: func(data interface{}, c *gin.Context) bool {
-      if v, ok := data.(*User); ok && v.UserName == "admin" {
+      if _, ok := data.(*User); ok {
         return true
       }
 
       return false
     },
+    
     Unauthorized: func(c *gin.Context, code int, message string) {
       c.JSON(code, gin.H{
         "code":    code,
