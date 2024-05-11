@@ -27,3 +27,4 @@ frontend/next-env.d.ts
 
 # backend
 backend/.env
+backend/migrations/atlas.sum

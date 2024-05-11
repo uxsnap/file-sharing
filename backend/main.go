@@ -1,29 +1,15 @@
 package main
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
-	"github.com/uxsnap/file-sharing/backend/auth"
+	"github.com/uxsnap/file-sharing/backend/inits"
 )
 
 func main() {
+	inits.LoadEnvVars()
+	inits.ConnectToDb()
+
 	router := gin.Default()
 
-	/** Middleware **/
-	jwtMiddleware, err := auth.ApplyJWTMiddleware()
-	
-	if err != nil {
-		log.Fatal(err)
-	}
-	
-	router.Use(jwtMiddleware.MiddlewareFunc())
-	/** Middleware **/ 
-	
-	// Auth
-	router.GET("/refresh_token", jwtMiddleware.RefreshHandler)
-	router.POST("/login", jwtMiddleware.LoginHandler)
-	router.POST("/logout", jwtMiddleware.LogoutHandler)
-
-	router.Run()
+	router.Run(":8080")
 }
