@@ -1,5 +1,7 @@
 "use client";
 
+import RegisterForm from "@/components/RegisterForm";
+import { AuthType } from "@/types";
 import {
   Button,
   Card,
@@ -9,12 +11,6 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useState } from "react";
-
-enum AuthType {
-  LOGIN = "Login",
-  REGISTER = "Register",
-  FORGOT_PASSWORD = "Forgot Password",
-}
 
 export default function Page() {
   const [authType, setAuthType] = useState(AuthType.LOGIN);
@@ -55,34 +51,7 @@ export default function Page() {
         );
 
       case AuthType.REGISTER:
-        return (
-          <>
-            <TextInput label="Login" />
-            <TextInput label="Email" mt={12} />
-            <TextInput label="Password" type="password" mt={12} />
-
-            <Button mt={12} fullWidth>
-              Register
-            </Button>
-
-            <Button
-              onClick={() => setAuthType(AuthType.LOGIN)}
-              variant="light"
-              mt={8}
-              fullWidth
-            >
-              Login
-            </Button>
-            <Button
-              onClick={() => setAuthType(AuthType.FORGOT_PASSWORD)}
-              variant="light"
-              mt={8}
-              fullWidth
-            >
-              Forgot Password
-            </Button>
-          </>
-        );
+        return <RegisterForm onAuthChange={setAuthType} />;
 
       case AuthType.FORGOT_PASSWORD:
         return (

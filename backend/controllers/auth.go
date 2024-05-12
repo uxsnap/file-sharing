@@ -9,25 +9,26 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/uxsnap/file-sharing/backend/inits"
 	"github.com/uxsnap/file-sharing/backend/models"
+	"github.com/uxsnap/file-sharing/backend/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type authBody struct {
-	Email string
-	Password string
+	Email string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8,max=128"`
 }
 
 type registerBody struct {
 	authBody
-	Name string
+	Name string `json:"name" binding:"required,alphanum,min=5,max=128"`
 }
 
 func Register(c *gin.Context) {
 	var body registerBody
 
-	if c.Bind(&body) != nil {
+	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid body",
+			"error": utils.PrepareValidationErrors(err),
 		})
 
 		return
