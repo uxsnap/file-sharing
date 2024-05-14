@@ -11,14 +11,22 @@ import (
 	"github.com/uxsnap/file-sharing/backend/models"
 )
 
-func RequireAuth(c *gin.Context) {
-	tokenString, err := c.Cookie("Authorization")
+type tokenBody struct {
+	Token string
+}
 
-	if err != nil {
-		c.AbortWithStatus(http.StatusUnauthorized)
+func RequireAuth(c *gin.Context) {
+	var body tokenBody
+
+	if c.Bind(&body) != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid token body",
+		})
+
+		return
 	}
 
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(body.Token, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			c.AbortWithStatus(http.StatusUnauthorized)
 		}
@@ -38,9 +46,10 @@ func RequireAuth(c *gin.Context) {
 			c.AbortWithStatus(http.StatusUnauthorized)
 		}
 
+		c.Set("userID", user.ID)
 		c.Next()
-
-	} else {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		return 
 	}
+
+	c.AbortWithStatus(http.StatusUnauthorized)
 }

@@ -12,3 +12,7 @@ export type ErrorField = {
   field: string;
   message: string;
 };
+
+export type TokenResponse = {
+  token: string;
+};

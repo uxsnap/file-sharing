@@ -1,42 +1,47 @@
-import register from "@/queries/register";
-import { AuthType, ErrorField, ErrorResponse } from "@/types";
-import fieldErrorHandle from "@/utils/fieldErrorHandle";
+import login from "@/queries/login";
+import { AuthType, ErrorField, ErrorResponse, TokenResponse } from "@/types";
 import handleAuthError from "@/utils/handleAuthError";
 import { Button, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useMutation } from "@tanstack/react-query";
+import { useLocalStorage } from "@mantine/hooks";
 
 type Props = {
   onAuthChange: (newAuthType: AuthType) => void;
 };
 
-const RegisterForm = ({ onAuthChange }: Props) => {
+const LoginForm = ({ onAuthChange }: Props) => {
+  const [_, setToken] = useLocalStorage({
+    key: "jwt_token",
+    defaultValue: "",
+  });
+
   const form = useForm({
     mode: "uncontrolled",
     initialValues: {
       email: "",
-      name: "",
       password: "",
     },
-
     validate: {
       email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
     },
   });
 
   const { mutate } = useMutation({
-    mutationFn: register,
+    mutationFn: login,
     onError: (errorResp: ErrorResponse<ErrorField[]>) => {
       handleAuthError(form, errorResp);
     },
-    onSuccess: () => {
+    onSuccess: (data: TokenResponse) => {
+      setToken(data.token);
+
       notifications.show({
-        title: "Registration",
-        message: "Success",
+        title: "Login",
+        message: "Successfully has been logged",
       });
 
-      onAuthChange(AuthType.LOGIN);
+
     },
   });
 
@@ -44,26 +49,25 @@ const RegisterForm = ({ onAuthChange }: Props) => {
 
   return (
     <form onSubmit={onSubmit}>
-      <TextInput label="Login" {...form.getInputProps("name")} />
-      <TextInput label="Email" mt={12} {...form.getInputProps("email")} />
+      <TextInput label="Email" {...form.getInputProps("email")} />
       <TextInput
-        label="Password"
         type="password"
         mt={12}
+        label="Password"
         {...form.getInputProps("password")}
       />
 
       <Button type="submit" mt={12} fullWidth>
-        Register
+        Login
       </Button>
 
       <Button
-        onClick={() => onAuthChange(AuthType.LOGIN)}
+        onClick={() => onAuthChange(AuthType.REGISTER)}
         variant="light"
         mt={8}
         fullWidth
       >
-        Login
+        Register
       </Button>
       <Button
         onClick={() => onAuthChange(AuthType.FORGOT_PASSWORD)}
@@ -77,4 +81,4 @@ const RegisterForm = ({ onAuthChange }: Props) => {
   );
 };
 
-export default RegisterForm;
+export default LoginForm;

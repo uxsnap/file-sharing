@@ -1,5 +1,6 @@
 "use client";
 
+import LoginForm from "@/components/LoginForm";
 import RegisterForm from "@/components/RegisterForm";
 import { AuthType } from "@/types";
 import {
@@ -22,33 +23,7 @@ export default function Page() {
   const renderAuth = () => {
     switch (authType) {
       case AuthType.LOGIN:
-        return (
-          <>
-            <TextInput label="Login/Email" />
-            <TextInput type="password" mt={12} label="Password" />
-
-            <Button mt={12} fullWidth>
-              Login
-            </Button>
-
-            <Button
-              onClick={() => setAuthType(AuthType.REGISTER)}
-              variant="light"
-              mt={8}
-              fullWidth
-            >
-              Register
-            </Button>
-            <Button
-              onClick={() => setAuthType(AuthType.FORGOT_PASSWORD)}
-              variant="light"
-              mt={8}
-              fullWidth
-            >
-              Forgot Password
-            </Button>
-          </>
-        );
+        return <LoginForm onAuthChange={setAuthType} />;
 
       case AuthType.REGISTER:
         return <RegisterForm onAuthChange={setAuthType} />;

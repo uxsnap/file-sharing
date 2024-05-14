@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
+	"net/smtp"
 	"os"
 	"time"
 
@@ -49,14 +51,42 @@ func Register(c *gin.Context) {
 		Name: body.Name,
 		Password: string(hashedPass),
 	}
-
+	
 	result := inits.DB.Create(&user)
-
+	
 	if result.Error != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "failed to create user",
+			"error": "Failed to create user. Email is probably has been used",
 		})
+		
+		return
+	}
 
+	generatedCode := utils.GenerateCode()
+
+	userCode := models.UserCode{
+		UserID: user.ID,
+		Code: generatedCode,
+	}
+
+	userCodeResult := inits.DB.Create(&userCode)
+
+	// Handle the error properly. Delete use for example
+	if userCodeResult.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to create user code.",
+		})
+		
+		return
+	}
+
+	sendMailErr := utils.SendCodeEmail(body.Email, generatedCode)
+
+	if sendMailErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to send email.",
+		})
+		
 		return
 	}
 
@@ -89,7 +119,7 @@ func Login(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "passwords don't match",
+			"error": "Passwords don't match",
 		})
 
 		return
@@ -104,14 +134,46 @@ func Login(c *gin.Context) {
 	
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "failed to create token",
+			"error": "Failed to create token",
 		})
 
 		return
 	}
 
-	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("Authorization", tokenString, 3600 * 24 * 30, "", "", false, true)
+	c.JSON(http.StatusOK, gin.H{
+		"token": tokenString,
+	})
+}
 
-	c.JSON(http.StatusOK, gin.H{})
+func Validate(c *gin.Context) {
+	_, exists := c.Get("userID")
+
+	if !exists {
+		c.AbortWithStatus(http.StatusUnauthorized)
+	}
+
+	c.JSON(http.StatusOK, gin.H{});
+}
+
+func Code(c *gin.Context) {
+	auth := smtp.PlainAuth(
+		"",
+		"nuxxx7132@gmail.com",
+		"caph ermz iejp gpvx",
+		"smtp.gmail.com",
+	)
+
+	msg := "Subject: TEst subject\nThis is the body of my email"
+
+	err := smtp.SendMail(
+		"smtp.gmail.com:587",
+		auth,
+		"file-sharing", 
+		[]string{"nuxxx7132@gmail.com"},
+		[]byte(msg),
+	)
+
+	if err != nil {
+		fmt.Println(err)
+	}
 }
