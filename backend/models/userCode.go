@@ -1,9 +1,7 @@
 package models
 
-import "gorm.io/gorm"
-
 type UserCode struct {
-  gorm.Model
-  Code string
-	UserID uint
+  ID        uint `gorm:"primarykey"`
+  Code      string
+	UserID    uint
 }

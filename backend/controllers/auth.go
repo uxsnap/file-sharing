@@ -3,7 +3,6 @@ package controllers
 import (
 	"fmt"
 	"net/http"
-	"net/smtp"
 	"os"
 	"time"
 
@@ -14,6 +13,11 @@ import (
 	"github.com/uxsnap/file-sharing/backend/utils"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type codeBody struct {
+	UserID uint `json:"userID" binding:"required,numeric"`
+	Code string `json:"code" binding:"required,numeric,len=5"`
+}
 
 type authBody struct {
 	Email string `json:"email" binding:"required,email"`
@@ -56,7 +60,7 @@ func Register(c *gin.Context) {
 	
 	if result.Error != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Failed to create user. Email is probably has been used",
+			"error": "Failed to create user. User already exists",
 		})
 		
 		return
@@ -90,7 +94,9 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, gin.H{
+		"userID": user.ID, 
+	})
 }
 
 func Login(c *gin.Context) {
@@ -107,9 +113,9 @@ func Login(c *gin.Context) {
 	var user models.User
 	inits.DB.First(&user, "email = ?", body.Email)
 
-	if user.ID == 0 {
+	if user.ID == 0 || !user.IsActive {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid email or password",
+			"error": "Invalid email or password",
 		})
 
 		return
@@ -156,24 +162,49 @@ func Validate(c *gin.Context) {
 }
 
 func Code(c *gin.Context) {
-	auth := smtp.PlainAuth(
-		"",
-		"nuxxx7132@gmail.com",
-		"caph ermz iejp gpvx",
-		"smtp.gmail.com",
-	)
+	var body codeBody
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": utils.PrepareValidationErrors(err),
+		})
 
-	msg := "Subject: TEst subject\nThis is the body of my email"
-
-	err := smtp.SendMail(
-		"smtp.gmail.com:587",
-		auth,
-		"file-sharing", 
-		[]string{"nuxxx7132@gmail.com"},
-		[]byte(msg),
-	)
-
-	if err != nil {
-		fmt.Println(err)
+		return
 	}
+
+
+	var userCode models.UserCode;
+	inits.DB.Where(&models.UserCode{ Code: body.Code, UserID: body.UserID }).First(&userCode)
+
+	if userCode.ID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Cannot find code for this user",
+		})
+
+		return
+	}
+
+	var user models.User
+	inits.DB.First(&user, userCode.UserID)
+
+	if user.ID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Cannot find user",
+		})
+
+		return
+	}
+
+	fmt.Println(user.Email)
+	
+	inits.DB.Delete(&userCode)
+	
+	if err := inits.DB.Model(&user).Updates(map[string]interface{}{"is_active": true }).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Cannot update user",
+		})
+
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{});
 }

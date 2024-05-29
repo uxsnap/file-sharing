@@ -24,8 +24,8 @@ func main() {
 	// Auth
 	router.POST("/register", controllers.Register)
 	router.POST("/login", controllers.Login)
+	router.POST("/code", controllers.Code)
 	router.POST("/validate", middleware.RequireAuth, controllers.Validate)
-	router.GET("/code", controllers.Code)
 
 	router.Run(":8080")
 }
