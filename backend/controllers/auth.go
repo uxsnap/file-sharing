@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -15,7 +14,7 @@ import (
 )
 
 type codeBody struct {
-	UserID uint `json:"userID" binding:"required,numeric"`
+	Email string `json:"email" binding:"required,email"`
 	Code string `json:"code" binding:"required,numeric,len=5"`
 }
 
@@ -70,6 +69,7 @@ func Register(c *gin.Context) {
 
 	userCode := models.UserCode{
 		UserID: user.ID,
+		Email: user.Email,
 		Code: generatedCode,
 	}
 
@@ -94,9 +94,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"userID": user.ID, 
-	})
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func Login(c *gin.Context) {
@@ -173,7 +171,7 @@ func Code(c *gin.Context) {
 
 
 	var userCode models.UserCode;
-	inits.DB.Where(&models.UserCode{ Code: body.Code, UserID: body.UserID }).First(&userCode)
+	inits.DB.Where(&models.UserCode{ Code: body.Code, Email: body.Email }).First(&userCode)
 
 	if userCode.ID == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -184,7 +182,7 @@ func Code(c *gin.Context) {
 	}
 
 	var user models.User
-	inits.DB.First(&user, userCode.UserID)
+	inits.DB.First(&user, "email = ?", userCode.Email)
 
 	if user.ID == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -193,12 +191,10 @@ func Code(c *gin.Context) {
 
 		return
 	}
-
-	fmt.Println(user.Email)
 	
 	inits.DB.Delete(&userCode)
 	
-	if err := inits.DB.Model(&user).Updates(map[string]interface{}{"is_active": true }).Error; err != nil {
+	if err := inits.DB.Model(&user).Updates(&models.User{ IsActive: true }).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Cannot update user",
 		})

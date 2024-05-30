@@ -1,7 +1,8 @@
 package models
 
 type UserCode struct {
-  ID        uint `gorm:"primarykey"`
+  ID        uint   `gorm:"primarykey"`
   Code      string
-	UserID    uint
+  UserID    uint
+	Email     string
 }
