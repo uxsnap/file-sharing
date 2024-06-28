@@ -1,5 +1,11 @@
 import login from "@/queries/login";
-import { AuthType, ErrorField, ErrorResponse, TokenResponse } from "@/types";
+import {
+  AuthType,
+  ErrorField,
+  ErrorResponse,
+  LoginErrorResponse,
+  TokenResponse,
+} from "@/types";
 import handleAuthError from "@/utils/handleAuthError";
 import { Button, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
@@ -8,7 +14,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useLocalStorage } from "@mantine/hooks";
 
 type Props = {
-  onAuthChange: (newAuthType: AuthType) => void;
+  onAuthChange: (newAuthType: AuthType, payload?: any) => void;
 };
 
 const LoginForm = ({ onAuthChange }: Props) => {
@@ -30,8 +36,12 @@ const LoginForm = ({ onAuthChange }: Props) => {
 
   const { mutate } = useMutation({
     mutationFn: login,
-    onError: (errorResp: ErrorResponse<ErrorField[]>) => {
+    onError: (errorResp: LoginErrorResponse<ErrorField[]>) => {
       handleAuthError(form, errorResp);
+
+      if (!errorResp.is_active) {
+        onAuthChange(AuthType.CODE, form.getValues().email);
+      }
     },
     onSuccess: (data: TokenResponse) => {
       setToken(data.token);
@@ -40,8 +50,6 @@ const LoginForm = ({ onAuthChange }: Props) => {
         title: "Login",
         message: "Successfully has been logged",
       });
-
-
     },
   });
 

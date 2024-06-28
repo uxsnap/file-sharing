@@ -111,9 +111,18 @@ func Login(c *gin.Context) {
 	var user models.User
 	inits.DB.First(&user, "email = ?", body.Email)
 
-	if user.ID == 0 || !user.IsActive {
+	if user.ID == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid email or password",
+		})
+
+		return
+	}
+
+	if !user.IsActive {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "User is not active",
+			"is_active": false,
 		})
 
 		return

@@ -8,7 +8,7 @@ import { notifications } from "@mantine/notifications";
 import { useMutation } from "@tanstack/react-query";
 
 type Props = {
-  onAuthChange: (newAuthType: AuthType) => void;
+  onAuthChange: (newAuthType: AuthType, payload?: any) => void;
 };
 
 const RegisterForm = ({ onAuthChange }: Props) => {
@@ -36,7 +36,7 @@ const RegisterForm = ({ onAuthChange }: Props) => {
         message: "Success",
       });
 
-      onAuthChange(AuthType.LOGIN);
+      onAuthChange(AuthType.CODE, form.getValues().email);
     },
   });
 

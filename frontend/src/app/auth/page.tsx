@@ -1,5 +1,6 @@
 "use client";
 
+import CodeForm from "@/components/CodeForm";
 import LoginForm from "@/components/LoginForm";
 import RegisterForm from "@/components/RegisterForm";
 import { AuthType } from "@/types";
@@ -13,20 +14,38 @@ import {
 } from "@mantine/core";
 import { useState } from "react";
 
+type AuthData = {
+  type: AuthType;
+  payload?: any;
+};
+
 export default function Page() {
-  const [authType, setAuthType] = useState(AuthType.LOGIN);
+  const [authData, setAuthData] = useState<AuthData>({
+    type: AuthType.LOGIN,
+  });
 
   const theme = useMantineTheme();
 
   const mainColor = theme.colors.blue[4];
 
+  const handleAuthData = (type: AuthType, payload: any = null) => {
+    setAuthData({
+      type,
+      payload,
+    });
+  };
+
   const renderAuth = () => {
-    switch (authType) {
+    switch (authData.type) {
       case AuthType.LOGIN:
-        return <LoginForm onAuthChange={setAuthType} />;
+        return <LoginForm onAuthChange={handleAuthData} />;
 
       case AuthType.REGISTER:
-        return <RegisterForm onAuthChange={setAuthType} />;
+        return <RegisterForm onAuthChange={handleAuthData} />;
+      case AuthType.CODE:
+        return (
+          <CodeForm email={authData.payload} onAuthChange={handleAuthData} />
+        );
 
       case AuthType.FORGOT_PASSWORD:
         return (
@@ -38,7 +57,7 @@ export default function Page() {
             </Button>
 
             <Button
-              onClick={() => setAuthType(AuthType.LOGIN)}
+              onClick={() => handleAuthData(AuthType.LOGIN)}
               variant="light"
               mt={8}
               fullWidth
@@ -46,7 +65,7 @@ export default function Page() {
               Login
             </Button>
             <Button
-              onClick={() => setAuthType(AuthType.REGISTER)}
+              onClick={() => handleAuthData(AuthType.REGISTER)}
               variant="light"
               mt={8}
               fullWidth
@@ -64,7 +83,7 @@ export default function Page() {
     <Flex align="center" justify="center" w="100%" h="100%" bg={mainColor}>
       <Card miw={350} shadow="sm" padding="lg" radius="md" withBorder>
         <Card.Section withBorder inheritPadding py="xs">
-          <Text fw={500}>{authType}</Text>
+          <Text fw={500}>{authData.type}</Text>
         </Card.Section>
 
         <Card.Section p="md">{renderAuth()}</Card.Section>

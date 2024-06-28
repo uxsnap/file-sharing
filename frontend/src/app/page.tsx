@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { FaUser, FaFileCode } from "react-icons/fa";
 import { AppShell, Button, Flex, useMantineTheme, Text } from "@mantine/core";
@@ -8,11 +9,23 @@ import "@mantine/core/styles.css";
 import FileItem from "@/components/FileItem";
 import Search from "@/components/Search";
 import FileDropZone from "@/components/FileDropZone";
+import { useLocalStorage } from "@mantine/hooks";
 
 export default function Home() {
   const theme = useMantineTheme();
+  const router = useRouter();
+
+  const [_, setToken] = useLocalStorage({
+    key: "jwt_token",
+    defaultValue: "",
+  });
 
   const mainColor = theme.colors.blue[4];
+
+  const logout = () => {
+    setToken("");
+    router.push("/auth");
+  };
 
   return (
     <AppShell header={{ height: 60 }} padding="sm">
@@ -42,7 +55,7 @@ export default function Home() {
                 <Text fw="700">UserName</Text>
               </Flex>
             </Button>
-            <Button color="yellow" variant="light">
+            <Button onClick={logout} color="yellow" variant="light">
               Logout
             </Button>
           </Flex>
